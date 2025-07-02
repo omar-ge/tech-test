@@ -18,7 +18,6 @@ const imageOut = document.querySelector('.image-grid')
 
 const advisorNotesSection = document.querySelector('.advisor-notes')
 const imgLoading = document.querySelector('.img-loading')
-const imgSection = document.querySelector('.image-grid')
 const inspectionImgSection = document.querySelector('.inspection-images-wrapper')
 
 const popUpModal = document.querySelector('.pop-up-modal')
@@ -1678,9 +1677,9 @@ function populateImages(arr) {
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (!entry.isIntersecting) {
-                    imgSection.classList.add('hide')
+                    imageOut.classList.add('hide')
                 } else {
-                    imgSection.classList.remove('hide')
+                    imageOut.classList.remove('hide')
                 }
             });
         }, {
