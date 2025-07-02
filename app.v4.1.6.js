@@ -1641,7 +1641,7 @@ function populateImages(arr) {
         return addWatermark(img.data).then(watermarkedImage => {
             return `
                 <div class="grid-item">
-                    <img src="data:image/jpeg;base64,${watermarkedImage}" alt="${img.Name}">
+                    <img loading="lazy" src="data:image/jpeg;base64,${watermarkedImage}" alt="${img.Name}">
                     <div class="grid-text">${img.Name}</div>
                 </div>
             `;
