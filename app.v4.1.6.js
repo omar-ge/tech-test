@@ -123,7 +123,7 @@ function getData(transId, generateLinkBtnParam, viewLinkBtnParam) {
                 populateChecklist(data)
                 populateAdvisorNotes(data)
 
-                fetchInspectionImages(data)
+                // fetchInspectionImages(data)
 
                 if (roleName == 'Service Advisor') {
 
