@@ -1673,7 +1673,7 @@ function populateImages(arr) {
 
         imgLoading.classList.add('hide')
 
-        const target = imgSection;
+        const target = inspectionImgSection;
 
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
