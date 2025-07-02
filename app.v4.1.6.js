@@ -18,7 +18,6 @@ const imageOut = document.querySelector('.image-grid')
 
 const advisorNotesSection = document.querySelector('.advisor-notes')
 const imgLoading = document.querySelector('.img-loading')
-const viewImgBtn = document.querySelector('.view-image-btn')
 const imgSection = document.querySelector('.image-grid')
 const inspectionImgSection = document.querySelector('.inspection-images-wrapper')
 
@@ -1672,7 +1671,6 @@ function populateImages(arr) {
             title: [1, image => `${image.alt}`]
         });
 
-        viewImgBtn.classList.remove('hide')
         imgLoading.classList.add('hide')
 
         const target = imgSection;
@@ -1681,7 +1679,8 @@ function populateImages(arr) {
             entries.forEach(entry => {
                 if (!entry.isIntersecting) {
                     imgSection.classList.add('hide')
-                    viewImgBtn.classList.remove('hide')
+                } else {
+                    imgSection.classList.remove('hide')
                 }
             });
         }, {
@@ -1693,10 +1692,6 @@ function populateImages(arr) {
 
 }
 
-viewImgBtn.addEventListener('click', () => {
-    imgSection.classList.remove('hide')
-    viewImgBtn.classList.add('hide')
-})
 
 function addWatermark(base64Image) {
     return new Promise((resolve, reject) => {
