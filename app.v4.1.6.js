@@ -33,6 +33,9 @@ const loaderOverlay = document.querySelector('.loader-overlay')
 const date = new Date()
 const year = date.getFullYear()
 
+let galleryViewer = null;
+let viewerScrollTimeout = null;
+
 let Tid = ''
 let roleName = ''
 
@@ -102,12 +105,12 @@ function getData(transId, generateLinkBtnParam, viewLinkBtnParam) {
 
 
         fetch('data.json')
-        // fetch(`https://geapps.germanexperts.ae:7007/api/generalcrmapigettechnicalinspection/${transId}`, {
-        //     method: 'GET',
-        //     headers: {
-        //         'Content-Type': 'application/json'
-        //     }
-        // })
+            // fetch(`https://geapps.germanexperts.ae:7007/api/generalcrmapigettechnicalinspection/${transId}`, {
+            //     method: 'GET',
+            //     headers: {
+            //         'Content-Type': 'application/json'
+            //     }
+            // })
             .then(res => {
                 if (!res.ok) {
                     throw new Error(`HTTP error! Status: ${res.status}`);
@@ -123,7 +126,7 @@ function getData(transId, generateLinkBtnParam, viewLinkBtnParam) {
                 populateChecklist(data)
                 populateAdvisorNotes(data)
 
-                // fetchInspectionImages(data)
+                fetchInspectionImages(data)
 
                 if (roleName == 'Service Advisor') {
 
@@ -195,45 +198,45 @@ function styleChangeBasedOnBranch(data) {
 function fetchInspectionImages(data) {
     try {
 
+
         fetch('data2.json')
-                    .then(res => {
-                        if (!res.ok) {
-                            throw new Error(`HTTP error! Status: ${res.status}`);
-                        }
-                        return res.json()
-                    })
-                    .then(data => {
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error(`HTTP error! Status: ${res.status}`);
+                }
+                return res.json()
+            })
+            .then(data => {
+                //  console.log(data);
 
-                        if (data.Message == "Get Technician Inspection List unsuccessfully") {
-                            console.log('image API', data.Message);
+                if (data.Message == "Get Technician Inspection List unsuccessfully") {
+                    console.log('image API', data.Message);
 
-                            if (data.Data[0].errors[0].message == "Token Expired") {
-                                console.log('image API', data.Data[0].errors[0].message)
-                                createNewAccessToken()
+                    if (data.Data[0].errors[0].message == "Token Expired") {
+                        console.log('image API', data.Data[0].errors[0].message)
+                        createNewAccessToken()
 
-                            } else if (data.Data[0].message == "No records found") {
+                    } else if (data.Data[0].message == "No records found") {
 
-                                console.log('image API', data.Data[0].message)
-                                imgLoading.classList.add('hide')
-                                inspectionImgSection.style.display = "none"
-
-                            }
-
-                        } else {
-
-                            // imgLoading.classList.add('hide')
-                            populateImages(data.Response)
-
-                        }
-
-                    })
-                    .catch(error => {
-                        console.log('image API fetch catch', error)
+                        console.log('image API', data.Data[0].message)
                         imgLoading.classList.add('hide')
                         inspectionImgSection.style.display = "none"
-                    })
 
+                    }
 
+                } else {
+
+                    // imgLoading.classList.add('hide')
+                    populateImages(data.Response)
+
+                }
+
+            })
+            .catch(error => {
+                console.log('image API fetch catch', error)
+                imgLoading.classList.add('hide')
+                inspectionImgSection.style.display = "none"
+            })
 
         // fetch('https://geapps.germanexperts.ae:7007/api/crmservicegetaccesstokenByStatus/Active/1')
         //     .then(res => {
@@ -266,7 +269,7 @@ function fetchInspectionImages(data) {
         //                 return res.json()
         //             })
         //             .then(data => {
-        //                 console.log(data);
+        //                 //  console.log(data);
 
         //                 if (data.Message == "Get Technician Inspection List unsuccessfully") {
         //                     console.log('image API', data.Message);
@@ -297,11 +300,11 @@ function fetchInspectionImages(data) {
         //                 inspectionImgSection.style.display = "none"
         //             })
 
-            // })
-            // .catch(error => {
-            //     console.log('get access token fetch err', error);
-            //     errorScreen.classList.remove('hide')
-            // })
+        //     })
+        //     .catch(error => {
+        //         console.log('get access token fetch err', error);
+        //         errorScreen.classList.remove('hide')
+        //     })
 
     } catch (error) {
         console.log('image API try catch', error)
@@ -655,8 +658,8 @@ function populateChecklist(data) {
 
     function checklistTemplate(type) {
 
-        return `<button class="accordion clicked active ${customTemplateLogic(type, 'NI', 'BSMI','two')}"><img class="accordion-icon" src="./assets/checklist-icons/service checklist.png">SERVICE CHECKLIST<span class="arrow">▼</span></button>
-    <div class="panel ${customTemplateLogic(type, 'NI', 'BSMI','two')} show" >
+        return `<button class="accordion clicked active ${customTemplateLogic(type, 'NI', 'BSMI', 'two')}"><img class="accordion-icon" src="./assets/checklist-icons/service checklist.png">SERVICE CHECKLIST<span class="arrow">▼</span></button>
+    <div class="panel ${customTemplateLogic(type, 'NI', 'BSMI', 'two')} show" >
         <div class="card-wrapper">
             <div class="card">
                 <div class="card-img-wrapper">
@@ -705,8 +708,8 @@ function populateChecklist(data) {
         </div>
     </div>
 
-    <button class="accordion ${customTemplateLogic(type, 'NI', 'BSMI','two')}"><img class="accordion-icon" src="./assets/checklist-icons/interior driver.png">INTERIOR-DRIVER POSITION<span class="arrow">►</span></button>
-                <div class="panel ${customTemplateLogic(type, 'NI', 'BSMI','two')}">
+    <button class="accordion ${customTemplateLogic(type, 'NI', 'BSMI', 'two')}"><img class="accordion-icon" src="./assets/checklist-icons/interior driver.png">INTERIOR-DRIVER POSITION<span class="arrow">►</span></button>
+                <div class="panel ${customTemplateLogic(type, 'NI', 'BSMI', 'two')}">
                     <div class="card-wrapper">
                         <div class="card">
                             <div class="card-img-wrapper">
@@ -743,8 +746,8 @@ function populateChecklist(data) {
                     </div>
                 </div>
 
-                <button class="accordion ${customTemplateLogic(type, 'NI', 'BSMI','two')}"><img class="accordion-icon" src="./assets/checklist-icons/exterior 1.png">EXTERIOR<span class="arrow">►</span></button>
-                <div class="panel ${customTemplateLogic(type, 'NI', 'BSMI','two')}">
+                <button class="accordion ${customTemplateLogic(type, 'NI', 'BSMI', 'two')}"><img class="accordion-icon" src="./assets/checklist-icons/exterior 1.png">EXTERIOR<span class="arrow">►</span></button>
+                <div class="panel ${customTemplateLogic(type, 'NI', 'BSMI', 'two')}">
                     <div class="card-wrapper">
                         <div class="card">
                             <div class="card-img-wrapper">
@@ -810,8 +813,8 @@ function populateChecklist(data) {
                     </div>
                 </div>
 
-                <button class="accordion ${customTemplateLogic(type, 'NI', 'BSMI','two')}"><img class="accordion-icon" src="./assets/checklist-icons/wheel 1.png">WHEELS AND TYRES<span class="arrow">►</span></button>
-                <div class="panel ${customTemplateLogic(type, 'NI', 'BSMI','two')}">
+                <button class="accordion ${customTemplateLogic(type, 'NI', 'BSMI', 'two')}"><img class="accordion-icon" src="./assets/checklist-icons/wheel 1.png">WHEELS AND TYRES<span class="arrow">►</span></button>
+                <div class="panel ${customTemplateLogic(type, 'NI', 'BSMI', 'two')}">
                     <div class="card-wrapper">
                         <div class="card">
                             <div class="card-img-wrapper">
@@ -868,8 +871,8 @@ function populateChecklist(data) {
                     </div>
                 </div>
 
-                <button class="accordion ${customTemplateLogic(type, 'NI', 'BSMI','two')}"><img class="accordion-icon" src="./assets/checklist-icons/brakes 1.png">BRAKES<span class="arrow">►</span></button>
-                <div class="panel ${customTemplateLogic(type, 'NI', 'BSMI','two')}">
+                <button class="accordion ${customTemplateLogic(type, 'NI', 'BSMI', 'two')}"><img class="accordion-icon" src="./assets/checklist-icons/brakes 1.png">BRAKES<span class="arrow">►</span></button>
+                <div class="panel ${customTemplateLogic(type, 'NI', 'BSMI', 'two')}">
                     <div class="card-wrapper">
                         <div class="card">
                             <div class="card-img-wrapper">
@@ -918,8 +921,8 @@ function populateChecklist(data) {
                     </div>
                 </div>
 
-                <button class="accordion ${customTemplateLogic(type, 'NI', 'BSMI','two')}"><img class="accordion-icon" src="./assets/checklist-icons/engine 1.png">ENGINE COMPARTMENT<span class="arrow">►</span></button>
-                <div class="panel ${customTemplateLogic(type, 'NI', 'BSMI','two')}">
+                <button class="accordion ${customTemplateLogic(type, 'NI', 'BSMI', 'two')}"><img class="accordion-icon" src="./assets/checklist-icons/engine 1.png">ENGINE COMPARTMENT<span class="arrow">►</span></button>
+                <div class="panel ${customTemplateLogic(type, 'NI', 'BSMI', 'two')}">
                     <div class="card-wrapper">
                         <div class="card">
                             <div class="card-img-wrapper">
@@ -1029,8 +1032,8 @@ function populateChecklist(data) {
                     </div>
                 </div>
 
-                <button class="accordion ${customTemplateLogic(type, 'NI', 'BSMI','two')}"><img class="accordion-icon" src="./assets/checklist-icons/interior 1.png">INTERIOR<span class="arrow">►</span></button>
-                <div class="panel ${customTemplateLogic(type, 'NI', 'BSMI','two')}">
+                <button class="accordion ${customTemplateLogic(type, 'NI', 'BSMI', 'two')}"><img class="accordion-icon" src="./assets/checklist-icons/interior 1.png">INTERIOR<span class="arrow">►</span></button>
+                <div class="panel ${customTemplateLogic(type, 'NI', 'BSMI', 'two')}">
                     <div class="card-wrapper">
                         <div class="card">
                             <div class="card-img-wrapper">
@@ -1113,8 +1116,8 @@ function populateChecklist(data) {
                     </div>
                 </div>
 
-                <button class="accordion last-acc ${customTemplateLogic(type, 'NI', 'BSMI','two')}"><img class="accordion-icon" src="./assets/checklist-icons/underbody 1.png">UNDER BODY<span class="arrow">►</span></button>
-                <div class="panel ${customTemplateLogic(type, 'NI', 'BSMI','two')}">
+                <button class="accordion last-acc ${customTemplateLogic(type, 'NI', 'BSMI', 'two')}"><img class="accordion-icon" src="./assets/checklist-icons/underbody 1.png">UNDER BODY<span class="arrow">►</span></button>
+                <div class="panel ${customTemplateLogic(type, 'NI', 'BSMI', 'two')}">
                     <div class="card-wrapper">
                         <div class="card">
                             <div class="card-img-wrapper">
@@ -1657,17 +1660,51 @@ function populateImages(arr) {
         imageOut.innerHTML = imgHtml; // Update the DOM
 
         // Initialize the image gallery after the images are populated
-        const gallery = new Viewer(document.getElementById('images'), {
-            toolbar: {
-                zoomIn: 1,
-                zoomOut: 1,
-                prev: 1,
-                reset: 1,
-                next: 1,
-                rotateLeft: 1,
-                rotateRight: 1,
-            },
-            title: [1, image => `${image.alt}`]
+        // const gallery = new Viewer(document.getElementById('images'), {
+        //     toolbar: {
+        //         zoomIn: 1,
+        //         zoomOut: 1,
+        //         prev: 1,
+        //         reset: 1,
+        //         next: 1,
+        //         rotateLeft: 1,
+        //         rotateRight: 1,
+        //     },
+        //     title: [1, image => `${image.alt}`]
+        // });
+
+        document.getElementById('images').addEventListener('click', function (e) {
+            const target = e.target.closest('img');
+
+            if (!target) return;
+
+            // Destroy existing viewer
+            if (galleryViewer) {
+                galleryViewer.destroy();
+                galleryViewer = null;
+            }
+
+            // Create viewer for all images in the container
+            galleryViewer = new Viewer(document.getElementById('images'), {
+                toolbar: {
+                    zoomIn: 1,
+                    zoomOut: 1,
+                    prev: 1,
+                    reset: 1,
+                    next: 1,
+                    rotateLeft: 1,
+                    rotateRight: 1,
+                },
+                title: [1, image => `${image.alt}`],
+                hidden() {
+                    // Auto destroy after closing viewer to free memory
+                    galleryViewer.destroy();
+                    galleryViewer = null;
+                }
+            });
+
+            // Show viewer for clicked image
+            galleryViewer.show();
         });
 
         imgLoading.classList.add('hide')
@@ -1675,6 +1712,19 @@ function populateImages(arr) {
 
 
 }
+
+
+window.addEventListener('scroll', () => {
+    if (galleryViewer) {
+        if (viewerScrollTimeout) clearTimeout(viewerScrollTimeout);
+
+        viewerScrollTimeout = setTimeout(() => {
+            galleryViewer.destroy();
+            galleryViewer = null;
+        }, 150);
+    }
+});
+
 
 function addWatermark(base64Image) {
     return new Promise((resolve, reject) => {
@@ -1869,7 +1919,7 @@ function openPdf() {
 
     // let apiUrl = `http://127.0.0.1:3000`
     let apiUrl = `https://geapps.germanexperts.ae:7010`
-    
+
     try {
         fetch(`${apiUrl}/api/download-pdf`, {
             method: 'POST',
