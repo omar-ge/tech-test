@@ -1641,7 +1641,7 @@ function populateImages(arr) {
         return addWatermark(img.data).then(watermarkedImage => {
             return `
                 <div class="grid-item">
-                    <img loading="lazy" src="data:image/jpeg;base64,${watermarkedImage}" alt="${img.Name}">
+                    <img src="data:image/jpeg;base64,${watermarkedImage}" alt="${img.Name}">
                     <div class="grid-text">${img.Name}</div>
                 </div>
             `;
@@ -1651,45 +1651,72 @@ function populateImages(arr) {
         });
     });
 
-    // Wait for all watermark promises to resolve
     Promise.all(watermarkPromises).then(results => {
-        imgHtml = results.join(''); // Combine all the HTML strings
-        imageOut.innerHTML = imgHtml; // Update the DOM
+        imgHtml = results.join('');
+        imageOut.innerHTML = imgHtml;
 
-        // Initialize the image gallery after the images are populated
-        const gallery = new Viewer(document.getElementById('images'), {
-            toolbar: {
-                zoomIn: 1,
-                zoomOut: 1,
-                prev: 1,
-                reset: 1,
-                next: 1,
-                rotateLeft: 1,
-                rotateRight: 1,
-            },
-            title: [1, image => `${image.alt}`]
-        });
-
-        imgLoading.classList.add('hide')
-
-        const target = inspectionImgSection;
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (!entry.isIntersecting) {
-                    imageOut.classList.add('hide')
-                } else {
-                    imageOut.classList.remove('hide')
-                }
+        // 🕓 Wait for <img> elements to actually load in DOM
+        waitForImagesToLoad(imageOut).then(() => {
+            // 👇 Now safe to initialize Viewer
+            const gallery = new Viewer(document.getElementById('images'), {
+                toolbar: {
+                    zoomIn: 1,
+                    zoomOut: 1,
+                    prev: 1,
+                    reset: 1,
+                    next: 1,
+                    rotateLeft: 1,
+                    rotateRight: 1,
+                },
+                title: [1, image => `${image.alt}`]
             });
-        }, {
-            threshold: 0   // 0 means even 1px visible counts as intersecting
-        });
 
-        observer.observe(target);
+            imgLoading.classList.add('hide');
+
+            // 👇 Observer to hide image grid on scroll
+            const target = inspectionImgSection;
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (!entry.isIntersecting) {
+                        imageOut.classList.add('hide');
+                    } else {
+                        imageOut.classList.remove('hide');
+                    }
+                });
+            }, { threshold: 0 });
+
+            observer.observe(target);
+        });
     });
 
+
 }
+
+function waitForImagesToLoad(container) {
+    const images = container.querySelectorAll('img');
+    if (images.length === 0) return Promise.resolve();
+
+    let loaded = 0;
+    return new Promise(resolve => {
+        images.forEach(img => {
+            if (img.complete) {
+                loaded++;
+                if (loaded === images.length) resolve();
+            } else {
+                img.addEventListener('load', () => {
+                    loaded++;
+                    if (loaded === images.length) resolve();
+                });
+                img.addEventListener('error', () => {
+                    loaded++;
+                    if (loaded === images.length) resolve();
+                });
+            }
+        });
+    });
+}
+
 
 
 function addWatermark(base64Image) {
@@ -1727,6 +1754,8 @@ function addWatermark(base64Image) {
         };
     });
 }
+
+
 function accordionLogic() {
 
     let acc = document.getElementsByClassName("accordion");
