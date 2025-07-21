@@ -1632,81 +1632,114 @@ function populateAdvisorNotes(data) {
 
 
 function populateImages(arr) {
-    let imgHtml = ``;
+    let imgHtml = arr.map(img => {
+        return `
+            <div class="grid-item">
+                <img src="${img.data}" alt="${img.Name}" loading="lazy">
+                <div class="grid-text">${img.Name}</div>
+            </div>
+        `;
+    }).join('');
 
-    const watermarkPromises = arr.map(img => {
-        return addWatermark(img.data).then(watermarkedImage => {
-            return `
-                <div class="grid-item">
-                    <img src="${watermarkedImage}" alt="${img.Name}">
-                    <div class="grid-text">${img.Name}</div>
-                </div>
-            `;
-        }).catch(error => {
-            console.error(error);
-            return ''; // Skip this image if error occurs
-        });
+    imageOut.innerHTML = imgHtml;
+
+    // Initialize the image gallery after the images are populated
+    const gallery = new Viewer(document.getElementById('images'), {
+        toolbar: {
+            zoomIn: 1,
+            zoomOut: 1,
+            prev: 1,
+            reset: 1,
+            next: 1,
+            rotateLeft: 1,
+            rotateRight: 1,
+        },
+        title: [1, image => `${image.alt}`]
     });
 
-    Promise.all(watermarkPromises).then(results => {
-        imgHtml = results.join('');
-        imageOut.innerHTML = imgHtml;
-
-        // Initialize image viewer plugin
-        const gallery = new Viewer(document.getElementById('images'), {
-            toolbar: {
-                zoomIn: 1,
-                zoomOut: 1,
-                prev: 1,
-                reset: 1,
-                next: 1,
-                rotateLeft: 1,
-                rotateRight: 1,
-            },
-            title: [1, image => `${image.alt}`]
-        });
-
-        imgLoading.classList.add('hide');
-    });
+    imgLoading.classList.add('hide');
 }
 
-function addWatermark(imageUrl) {
-    return new Promise((resolve, reject) => {
-        const watermark = new Image();
-        watermark.src = './assets/ge watermark.png';
-        watermark.crossOrigin = 'anonymous';
+// ? logic using url but still converts to base64 for water mark
 
-        watermark.onload = () => {
-            const img = new Image();
-            img.crossOrigin = 'anonymous';
-            img.src = imageUrl;
+// function populateImages(arr) {
+//     let imgHtml = ``;
 
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
+//     const watermarkPromises = arr.map(img => {
+//         return addWatermark(img.data).then(watermarkedImage => {
+//             return `
+//                 <div class="grid-item">
+//                     <img src="${watermarkedImage}" alt="${img.Name}">
+//                     <div class="grid-text">${img.Name}</div>
+//                 </div>
+//             `;
+//         }).catch(error => {
+//             console.error(error);
+//             return ''; // Skip this image if error occurs
+//         });
+//     });
 
-                canvas.width = img.width;
-                canvas.height = img.height;
-                ctx.drawImage(img, 0, 0);
+//     Promise.all(watermarkPromises).then(results => {
+//         imgHtml = results.join('');
+//         imageOut.innerHTML = imgHtml;
 
-                const watermarkWidth = img.width / 3;
-                const watermarkHeight = (watermark.height / watermark.width) * watermarkWidth;
+//         // Initialize image viewer plugin
+//         const gallery = new Viewer(document.getElementById('images'), {
+//             toolbar: {
+//                 zoomIn: 1,
+//                 zoomOut: 1,
+//                 prev: 1,
+//                 reset: 1,
+//                 next: 1,
+//                 rotateLeft: 1,
+//                 rotateRight: 1,
+//             },
+//             title: [1, image => `${image.alt}`]
+//         });
 
-                const xPos = (canvas.width - watermarkWidth) / 2;
-                const yPos = (canvas.height - watermarkHeight) / 2;
+//         imgLoading.classList.add('hide');
+//     });
+// }
 
-                ctx.drawImage(watermark, xPos, yPos, watermarkWidth, watermarkHeight);
+// function addWatermark(imageUrl) {
+//     return new Promise((resolve, reject) => {
+//         const watermark = new Image();
+//         watermark.src = './assets/ge watermark.png';
+//         watermark.crossOrigin = 'anonymous';
 
-                const watermarkedUrl = canvas.toDataURL('image/png');
-                resolve(watermarkedUrl);
-            };
+//         watermark.onload = () => {
+//             const img = new Image();
+//             img.crossOrigin = 'anonymous';
+//             img.src = imageUrl;
 
-            img.onerror = reject;
-        };
+//             img.onload = () => {
+//                 const canvas = document.createElement('canvas');
+//                 const ctx = canvas.getContext('2d');
 
-        watermark.onerror = reject;
-    });
-}
+//                 canvas.width = img.width;
+//                 canvas.height = img.height;
+//                 ctx.drawImage(img, 0, 0);
+
+//                 const watermarkWidth = img.width / 3;
+//                 const watermarkHeight = (watermark.height / watermark.width) * watermarkWidth;
+
+//                 const xPos = (canvas.width - watermarkWidth) / 2;
+//                 const yPos = (canvas.height - watermarkHeight) / 2;
+
+//                 ctx.drawImage(watermark, xPos, yPos, watermarkWidth, watermarkHeight);
+
+//                 const watermarkedUrl = canvas.toDataURL('image/png');
+//                 resolve(watermarkedUrl);
+//             };
+
+//             img.onerror = reject;
+//         };
+
+//         watermark.onerror = reject;
+//     });
+// }
+
+// ? old logic
 
 // function populateImages(arr) {
 //     let imagesArr = arr;
