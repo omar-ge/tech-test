@@ -203,6 +203,7 @@ function fetchInspectionImages(data) {
                 return res.json()
             })
             .then(data => {
+                //  console.log(data);
 
                 if (data.Message == "Get Technician Inspection List unsuccessfully") {
                     console.log('image API', data.Message);
@@ -232,8 +233,6 @@ function fetchInspectionImages(data) {
                 imgLoading.classList.add('hide')
                 inspectionImgSection.style.display = "none"
             })
-
-
 
         // fetch('https://geapps.germanexperts.ae:7007/api/crmservicegetaccesstokenByStatus/Active/1')
         //     .then(res => {
@@ -266,7 +265,7 @@ function fetchInspectionImages(data) {
         //                 return res.json()
         //             })
         //             .then(data => {
-        //                 console.log(data);
+        //                 //  console.log(data);
 
         //                 if (data.Message == "Get Technician Inspection List unsuccessfully") {
         //                     console.log('image API', data.Message);
@@ -297,11 +296,11 @@ function fetchInspectionImages(data) {
         //                 inspectionImgSection.style.display = "none"
         //             })
 
-        // })
-        // .catch(error => {
-        //     console.log('get access token fetch err', error);
-        //     errorScreen.classList.remove('hide')
-        // })
+        //     })
+        //     .catch(error => {
+        //         console.log('get access token fetch err', error);
+        //         errorScreen.classList.remove('hide')
+        //     })
 
     } catch (error) {
         console.log('image API try catch', error)
@@ -1633,21 +1632,19 @@ function populateAdvisorNotes(data) {
 
 
 function populateImages(arr) {
-    let imagesArr = arr;
     let imgHtml = ``;
 
-    // Create an array of promises for all watermarking processes
-    const watermarkPromises = imagesArr.map(img => {
+    const watermarkPromises = arr.map(img => {
         return addWatermark(img.data).then(watermarkedImage => {
             return `
                 <div class="grid-item">
-                    <img src="data:image/jpeg;base64,${watermarkedImage}" alt="${img.Name}">
+                    <img src="${watermarkedImage}" alt="${img.Name}">
                     <div class="grid-text">${img.Name}</div>
                 </div>
             `;
         }).catch(error => {
             console.error(error);
-            return ''; // Return an empty string if there's an error
+            return ''; // Skip this image if error occurs
         });
     });
 
@@ -1655,77 +1652,35 @@ function populateImages(arr) {
         imgHtml = results.join('');
         imageOut.innerHTML = imgHtml;
 
-        // 🕓 Wait for <img> elements to actually load in DOM
-        waitForImagesToLoad(imageOut).then(() => {
-            // 👇 Now safe to initialize Viewer
-            const gallery = new Viewer(document.getElementById('images'), {
-                toolbar: {
-                    zoomIn: 1,
-                    zoomOut: 1,
-                    prev: 1,
-                    reset: 1,
-                    next: 1,
-                    rotateLeft: 1,
-                    rotateRight: 1,
-                },
-                title: [1, image => `${image.alt}`]
-            });
-
-            imgLoading.classList.add('hide');
-
-            // 👇 Observer to hide image grid on scroll
-            const target = inspectionImgSection;
-
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (!entry.isIntersecting) {
-                        imageOut.classList.add('hide');
-                    } else {
-                        imageOut.classList.remove('hide');
-                    }
-                });
-            }, { threshold: 0 });
-
-            observer.observe(target);
+        // Initialize image viewer plugin
+        const gallery = new Viewer(document.getElementById('images'), {
+            toolbar: {
+                zoomIn: 1,
+                zoomOut: 1,
+                prev: 1,
+                reset: 1,
+                next: 1,
+                rotateLeft: 1,
+                rotateRight: 1,
+            },
+            title: [1, image => `${image.alt}`]
         });
-    });
 
-
-}
-
-function waitForImagesToLoad(container) {
-    const images = container.querySelectorAll('img');
-    if (images.length === 0) return Promise.resolve();
-
-    let loaded = 0;
-    return new Promise(resolve => {
-        images.forEach(img => {
-            if (img.complete) {
-                loaded++;
-                if (loaded === images.length) resolve();
-            } else {
-                img.addEventListener('load', () => {
-                    loaded++;
-                    if (loaded === images.length) resolve();
-                });
-                img.addEventListener('error', () => {
-                    loaded++;
-                    if (loaded === images.length) resolve();
-                });
-            }
-        });
+        imgLoading.classList.add('hide');
     });
 }
 
-
-
-function addWatermark(base64Image) {
+function addWatermark(imageUrl) {
     return new Promise((resolve, reject) => {
         const watermark = new Image();
-        watermark.src = './assets/ge watermark.png'; // Adjust the path to your PNG file
+        watermark.src = './assets/ge watermark.png';
+        watermark.crossOrigin = 'anonymous';
+
         watermark.onload = () => {
             const img = new Image();
-            img.src = `data:image/png;base64,${base64Image}`;
+            img.crossOrigin = 'anonymous';
+            img.src = imageUrl;
+
             img.onload = () => {
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
@@ -1742,18 +1697,96 @@ function addWatermark(base64Image) {
 
                 ctx.drawImage(watermark, xPos, yPos, watermarkWidth, watermarkHeight);
 
-                const watermarkedBase64 = canvas.toDataURL('image/png').split(',')[1];
-                resolve(watermarkedBase64);
+                const watermarkedUrl = canvas.toDataURL('image/png');
+                resolve(watermarkedUrl);
             };
-            img.onerror = (err) => {
-                reject(err);
-            };
+
+            img.onerror = reject;
         };
-        watermark.onerror = (err) => {
-            reject(err);
-        };
+
+        watermark.onerror = reject;
     });
 }
+
+// function populateImages(arr) {
+//     let imagesArr = arr;
+//     let imgHtml = ``;
+
+//     // Create an array of promises for all watermarking processes
+//     const watermarkPromises = imagesArr.map(img => {
+//         return addWatermark(img.data).then(watermarkedImage => {
+//             return `
+//                 <div class="grid-item">
+//                     <img src="data:image/jpeg;base64,${watermarkedImage}" alt="${img.Name}">
+//                     <div class="grid-text">${img.Name}</div>
+//                 </div>
+//             `;
+//         }).catch(error => {
+//             console.error(error);
+//             return ''; // Return an empty string if there's an error
+//         });
+//     });
+
+//     // Wait for all watermark promises to resolve
+//     Promise.all(watermarkPromises).then(results => {
+//         imgHtml = results.join(''); // Combine all the HTML strings
+//         imageOut.innerHTML = imgHtml; // Update the DOM
+
+//         // Initialize the image gallery after the images are populated
+//         const gallery = new Viewer(document.getElementById('images'), {
+//             toolbar: {
+//                 zoomIn: 1,
+//                 zoomOut: 1,
+//                 prev: 1,
+//                 reset: 1,
+//                 next: 1,
+//                 rotateLeft: 1,
+//                 rotateRight: 1,
+//             },
+//             title: [1, image => `${image.alt}`]
+//         });
+
+//         imgLoading.classList.add('hide')
+//     });
+
+
+// }
+
+// function addWatermark(base64Image) {
+//     return new Promise((resolve, reject) => {
+//         const watermark = new Image();
+//         watermark.src = './assets/ge watermark.png'; // Adjust the path to your PNG file
+//         watermark.onload = () => {
+//             const img = new Image();
+//             img.src = `data:image/png;base64,${base64Image}`;
+//             img.onload = () => {
+//                 const canvas = document.createElement('canvas');
+//                 const ctx = canvas.getContext('2d');
+
+//                 canvas.width = img.width;
+//                 canvas.height = img.height;
+//                 ctx.drawImage(img, 0, 0);
+
+//                 const watermarkWidth = img.width / 3;
+//                 const watermarkHeight = (watermark.height / watermark.width) * watermarkWidth;
+
+//                 const xPos = (canvas.width - watermarkWidth) / 2;
+//                 const yPos = (canvas.height - watermarkHeight) / 2;
+
+//                 ctx.drawImage(watermark, xPos, yPos, watermarkWidth, watermarkHeight);
+
+//                 const watermarkedBase64 = canvas.toDataURL('image/png').split(',')[1];
+//                 resolve(watermarkedBase64);
+//             };
+//             img.onerror = (err) => {
+//                 reject(err);
+//             };
+//         };
+//         watermark.onerror = (err) => {
+//             reject(err);
+//         };
+//     });
+// }
 
 
 function accordionLogic() {
